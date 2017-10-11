@@ -10,7 +10,7 @@ package test;
 public class Test {
 	
 	private static final int PORT = 502;
-	private static final String IP = "10.211.55.3";
+	private static final String IP = "";//Your IP Address
 	private static final int LENGTH = 1;
 	private static final int ADDRESS = 0;
 	private static final int index[]={0,1,2};
