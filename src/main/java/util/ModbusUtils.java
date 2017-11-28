@@ -1,14 +1,18 @@
 /**
  * 
  */
-package test;
+package util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 
 import net.wimpi.modbus.io.ModbusTCPTransaction;
 import net.wimpi.modbus.msg.ReadInputRegistersRequest;
 import net.wimpi.modbus.msg.ReadInputRegistersResponse;
 import net.wimpi.modbus.msg.WriteCoilRequest;
+import net.wimpi.modbus.msg.WriteMultipleCoilsRequest;
 import net.wimpi.modbus.msg.WriteMultipleRegistersRequest;
 import net.wimpi.modbus.msg.WriteSingleRegisterRequest;
 import net.wimpi.modbus.net.TCPMasterConnection;
@@ -20,6 +24,8 @@ import net.wimpi.modbus.procimg.SimpleRegister;
  *
  */
 public class ModbusUtils {
+	
+	private static final int MAX_LENGTH = 255;//字节
 	
 	private TCPMasterConnection con;
 	
@@ -139,6 +145,75 @@ public class ModbusUtils {
 			System.out.println("写入address:" + address + " " + "slaveId:" + slaveId + " " + "value:" + values + " 出错了哦！");
 			e.printStackTrace();
 		}
+	}
+	
+	//写入多个字符值
+	public void writeMultiBytesValueRegister(int address, int slaveId, byte[] values){
+		try{
+			Register register = new SimpleRegister();
+
+			WriteSingleRegisterRequest req = new WriteSingleRegisterRequest(address, register);
+			req.setUnitID(slaveId);
+			
+			OutputStream os = new ByteArrayOutputStream();
+			os.write(values);
+			System.out.println(values.length);
+			DataOutputStream dos = new DataOutputStream(os);
+			req.writeData(dos);
+			
+			ModbusTCPTransaction trans = new ModbusTCPTransaction(con);
+			trans.setRequest(req);
+			trans.execute();
+			
+			disConnect(con);
+			
+			System.out.println("写入成功！");
+		}catch(Exception e){
+			System.out.println("写入address:" + address + " " + "slaveId:" + slaveId + " " + "value:" + values + " 出错了哦！");
+			e.printStackTrace();
+		}
+	}
+	
+	public void writeHexStringRegister(int address, int slaveId, String hex){
+		if(hex == null || hex.equals("")){
+			System.out.println("字符串为空！");
+		}
+		try{
+			String[] stringArray = spiltStringByLength(hex, MAX_LENGTH);
+			
+			for(int i = 0; i < stringArray.length; i++){
+				System.out.println(stringArray[i]);
+			}
+			
+			//强行将十六进制字符串拼成4的倍数字节
+			int length = hex.length();
+			for(int i = 0; i < (length%4==0?0:(4-length%4)); i++){
+				hex += "0";
+			}
+			int[] values = new int[hex.length()/4];
+			for(int i = 0; i < hex.length(); i+=4){
+				String partHex = hex.substring(i, i+4);
+				values[i/4] = Integer.parseInt(partHex, 16);
+			}
+			
+			//writeMultiValueRegister(address, slaveId, values);
+		}catch(Exception e){
+			System.out.println("发送" + hex + "出错！");
+			e.printStackTrace();
+		}
+	}
+	
+	public String[] spiltStringByLength(String hex, int maxLength){
+		int index = 0;
+		maxLength *= 2;
+		String[] result = new String[hex.length()/maxLength + 1];
+		while(hex.length() > maxLength){
+			result[index] = hex.substring(0, maxLength);
+			hex = hex.substring(maxLength);
+			index++;
+		}
+		result[result.length - 1] = hex;
+		return result;
 	}
 	
 	//断开连接

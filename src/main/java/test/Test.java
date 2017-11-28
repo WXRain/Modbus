@@ -3,6 +3,10 @@
  */
 package test;
 
+import entity.Alarm;
+import util.ModbusUtils;
+import util.TypeConversion;
+
 /**
  * @author wangxinyu
  *
@@ -10,7 +14,7 @@ package test;
 public class Test {
 	
 	private static final int PORT = 502;
-	private static final String IP = "";//Your IP Address
+	private static final String IP = "10.211.55.3";//Your IP Address
 	private static final int LENGTH = 1;
 	private static final int ADDRESS = 0;
 	private static final int index[]={0,1,2};
@@ -32,8 +36,14 @@ public class Test {
 		//写入单个值
 //		utils.writeValueRegister(ADDRESS, SLAVE_ID, 126);
 		//写入多个值
-		int[] values = {3,4};
-		utils.writeMultiValueRegister(ADDRESS, SLAVE_ID, values);
+//		int[] values = {3,4};
+//		utils.writeMultiValueRegister(ADDRESS, SLAVE_ID, values);
+		//写入多个字符
+		Alarm a = new Alarm();
+		String hex = TypeConversion.string2HexString(a.toString());
+		System.out.println(hex);
+		System.out.println(TypeConversion.hexString2String(hex));
+		utils.writeHexStringRegister(ADDRESS, SLAVE_ID, hex);
 	}
 }
 
